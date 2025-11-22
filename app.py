@@ -5,15 +5,14 @@ import io
 import base64
 import time
 import matplotlib
-matplotlib.use('Agg') # Mode non-GUI untuk server
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 app = Flask(__name__)
 
-# ==========================================
-# CORE LOGIC: FRACTAL COMPRESSION
-# ==========================================
+
+# FRAKTAL Kompresi
 class FractalImageCompression:
     def __init__(self, range_size=8, domain_size=16, step=8):
         self.range_size = range_size
@@ -142,9 +141,7 @@ class FractalImageCompression:
             
         return np.clip(reconstructed, 0, 255).astype(np.uint8), history
 
-# ==========================================
-# VISUALIZATION HELPER FUNCTIONS
-# ==========================================
+# VISUALIZATION
 def fig_to_base64(fig):
     buf = io.BytesIO()
     fig.savefig(buf, format='png', bbox_inches='tight', pad_inches=0.1)
