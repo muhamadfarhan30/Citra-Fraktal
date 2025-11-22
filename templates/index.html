@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #F5F5F7;
+            color: #1D1D1F;
+        }
+
+        .apple-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border-radius: 24px;
+        }
+
+        .apple-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .apple-btn {
+            background: #f7f7f7;
+            color: rgb(46, 46, 46);
+            border: 1px solid black;
+            transition: all 0.3s ease;
+        }
+        .apple-btn:hover {
+            background: #2b2b2b;
+            color: rgb(255, 255, 255);
+            box-shadow: 0 8px 20px rgba(0, 113, 227, 0.3);
+            transform: scale(1.01);
+        }
+
+        .spinner {
+            width: 24px; height: 24px;
+            border: 3px solid rgba(0, 113, 227, 0.3);
+            border-radius: 50%;
+            border-top-color: #0071E3;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .label-text {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #86868B;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen py-12 px-4">
+
+    <div class="max-w-5xl mx-auto space-y-12">
+        
+        <header class="text-center space-y-2">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800">Pengolahan Citra Digital</h1>
+            <p class="text-lg text-gray-500">Implementasi Pemampatan Citra Dengan Metode Fraktal</p>
+        </header>
+
+        <div class="max-w-lg mx-auto">
+            <div class="apple-card p-8 md:p-10">
+                <form id="uploadForm" onsubmit="event.preventDefault();">
+                    <div class="mb-8">
+                        <label class="label-text">Upload Gambar</label>
+                        <input type="file" id="fileInput" accept="image/*" 
+                            class="block w-full text-sm text-gray-500
+                            file:mr-4 file:py-3 file:px-6
+                            file:rounded-xl file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-gray-100 file:text-gray-700
+                            file:transition
+                            hover:file:bg-gray-200 cursor-pointer w-full" />
+                    </div>
+
+                    <div class="mb-10">
+                        <label class="label-text">Target Resolusi</label>
+                        <div class="grid grid-cols-3 gap-2 bg-gray-100 p-1.5 rounded-xl">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="size" value="64" class="peer hidden">
+                                <div class="py-2.5 text-center rounded-lg text-sm font-medium text-gray-500 peer-checked:bg-white peer-checked:text-black peer-checked:shadow-sm transition-all">64 px</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="size" value="128" class="peer hidden" checked>
+                                <div class="py-2.5 text-center rounded-lg text-sm font-medium text-gray-500 peer-checked:bg-white peer-checked:text-black peer-checked:shadow-sm transition-all">128 px</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="size" value="256" class="peer hidden">
+                                <div class="py-2.5 text-center rounded-lg text-sm font-medium text-gray-500 peer-checked:bg-white peer-checked:text-black peer-checked:shadow-sm transition-all">256 px</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button onclick="runCompression()" id="btnProcess" class="w-full apple-btn rounded-2xl py-4 text-lg font-semibold shadow-lg flex justify-center items-center gap-2">
+                        Mulai Analisis
+                    </button>
+                    
+                    <div id="loader" class="hidden w-full py-4 bg-gray-50 rounded-2xl border border-gray-100 flex justify-center items-center gap-3 text-gray-500 font-medium">
+                        <div class="spinner"></div><span>Sedang memproses...</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="results" class="hidden space-y-10 opacity-0 transition-opacity duration-700">
+            
+            <section class="apple-card p-8">
+                <div class="flex flex-col md:flex-row gap-10">
+                    <div class="w-full md:w-1/3 space-y-6">
+                        <h2 class="text-2xl font-bold text-gray-800">1. Hasil Analisis</h2>
+                        <p class="text-gray-500 text-sm">Ringkasan performa algoritma pada citra ini.</p>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <span class="text-xs font-bold text-gray-400 uppercase">Waktu</span>
+                                <span class="text-xl font-bold text-gray-900" id="resTime">-</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-green-50 p-4 rounded-xl border border-green-100">
+                                <span class="text-xs font-bold text-green-600 uppercase">PSNR</span>
+                                <span class="text-xl font-bold text-green-700" id="resPsnr">-</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                <span class="text-xs font-bold text-blue-600 uppercase">Rasio</span>
+                                <span class="text-xl font-bold text-blue-700" id="resRatio">-</span>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
+                                <span class="text-xs font-bold text-gray-400 uppercase block mb-1">Kompresi Ukuran</span>
+                                <div class="flex justify-center items-center gap-2">
+                                    <span id="resSizeRaw" class="text-sm text-gray-500 line-through"></span>
+                                    <span class="text-gray-400">➜</span>
+                                    <span id="resSizeFrac" class="text-lg font-bold text-gray-900"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-2/3 bg-white rounded-2xl p-6 border border-gray-100 shadow-inner">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-gray-700">Visualisasi Partisi & Data</h3>
+                            <span class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">Blok 8x8</span>
+                        </div>
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <div class="w-full md:w-1/2">
+                                <img id="imgGrid" class="w-full rounded-lg border border-gray-200 shadow-sm hover:scale-105 transition-transform duration-300">
+                                <p class="text-xs text-center text-gray-400 mt-2">Visualisasi Grid Range Block</p>
+                            </div>
+                            <div class="w-full md:w-1/2">
+                                <div class="bg-gray-900 rounded-xl p-4 font-mono text-[10px] text-green-400 overflow-hidden relative shadow-inner h-full flex items-center">
+                                    <div id="resMatrix" class="whitespace-pre w-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="apple-card p-8">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">2. Bedah Encoding (Blok #1)</h2>
+                        <p class="text-gray-500 text-sm mt-1">Bagaimana komputer mencari pasangan untuk satu kotak kecil.</p>
+                    </div>
+                    <div class="text-right mt-4 md:mt-0">
+                        <p class="text-xs font-bold text-gray-400 uppercase">Lokasi Target</p>
+                        <p class="font-mono text-lg font-semibold text-gray-700" id="debugPos">-</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+                    <img id="imgDebug" class="w-full rounded-xl mb-6 shadow-sm">
+                    
+                    <div class="grid grid-cols-2 gap-8 border-t border-gray-200 pt-4">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase mb-1">Resep Matematika</p>
+                            <p class="text-gray-700">Scale (s): <span class="font-mono font-bold text-blue-600" id="debugScale">-</span></p>
+                            <p class="text-gray-700">Offset (o): <span class="font-mono font-bold text-green-600" id="debugOffset">-</span></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-gray-400 uppercase mb-1">Akurasi Pencocokan</p>
+                            <p class="text-gray-700">Error (MSE): <span class="font-mono font-bold text-red-500" id="debugError">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="apple-card p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">3. Sampel File Kompresi</h2>
+                <div class="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                    <table class="min-w-full bg-white text-sm">
+                        <thead class="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+                            <tr>
+                                <th class="py-3 px-6 text-left">Range Pos</th>
+                                <th class="py-3 px-6 text-left">Domain Idx</th>
+                                <th class="py-3 px-6 text-left">Rotasi</th>
+                                <th class="py-3 px-6 text-right">Scale (s)</th>
+                                <th class="py-3 px-6 text-right">Offset (o)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableCodes" class="divide-y divide-gray-100 text-gray-600"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="apple-card p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">4. Tahapan Iterasi (Decoding)</h2>
+                <img id="imgEvo" class="w-full rounded-xl border border-gray-100 shadow-sm">
+                <p class="text-center text-xs text-gray-400 mt-3">Gambar direkonstruksi dari noise melalui proses iterasi berulang.</p>
+            </section>
+
+            <section class="apple-card p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">5. Perbandingan Akhir</h2>
+                <img id="imgFinal" class="w-full rounded-xl shadow-md border border-gray-200">
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        async function runCompression() {
+            const fileInput = document.getElementById('fileInput');
+            const sizeInput = document.querySelector('input[name="size"]:checked');
+            
+            if (!fileInput.files[0]) { alert("Mohon pilih file gambar terlebih dahulu."); return; }
+
+            const btn = document.getElementById('btnProcess');
+            const loader = document.getElementById('loader');
+            const results = document.getElementById('results');
+            
+            btn.classList.add('hidden');
+            loader.classList.remove('hidden');
+            results.classList.add('hidden');
+            results.classList.remove('opacity-100');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('size', sizeInput.value);
+
+            try {
+                const response = await fetch('/process', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Metrics
+                    document.getElementById('resTime').innerText = data.metrics.time;
+                    document.getElementById('resPsnr').innerText = data.metrics.psnr;
+                    document.getElementById('resRatio').innerText = data.metrics.ratio;
+                    document.getElementById('resSizeRaw').innerText = data.metrics.size_raw;
+                    document.getElementById('resSizeFrac').innerText = data.metrics.size_frac;
+
+                    // Matrix
+                    let matrixHtml = "";
+                    data.data.matrix.forEach(row => { matrixHtml += "[" + row.join(", ").padEnd(25) + "]\n"; });
+                    document.getElementById('resMatrix').innerText = matrixHtml;
+
+                    // Images
+                    document.getElementById('imgGrid').src = 'data:image/png;base64,' + data.visuals.grid;
+                    document.getElementById('imgDebug').src = 'data:image/png;base64,' + data.visuals.debug;
+                    document.getElementById('imgEvo').src = 'data:image/png;base64,' + data.visuals.evolution;
+                    document.getElementById('imgFinal').src = 'data:image/png;base64,' + data.visuals.final;
+
+                    // Debug Info
+                    const dbg = data.data.debug_info;
+                    document.getElementById('debugPos').innerText = dbg.pos;
+                    document.getElementById('debugScale').innerText = dbg.scale;
+                    document.getElementById('debugOffset').innerText = dbg.offset;
+                    document.getElementById('debugError').innerText = dbg.error;
+
+                    // Table
+                    const table = document.getElementById('tableCodes');
+                    table.innerHTML = '';
+                    data.data.codes.forEach(c => {
+                        const row = `<tr class="hover:bg-blue-50 transition">
+                            <td class="py-3 px-6 font-mono text-xs">${c.r}</td>
+                            <td class="py-3 px-6 font-mono text-xs text-gray-500">${c.d}</td>
+                            <td class="py-3 px-6 text-gray-500">${c.t}°</td>
+                            <td class="py-3 px-6 text-right font-mono text-blue-600">${c.s}</td>
+                            <td class="py-3 px-6 text-right font-mono text-green-600">${c.o}</td>
+                        </tr>`;
+                        table.innerHTML += row;
+                    });
+
+                    loader.classList.add('hidden');
+                    btn.classList.remove('hidden');
+                    results.classList.remove('hidden');
+                    setTimeout(() => results.classList.add('opacity-100'), 50);
+                } else {
+                    alert('Error: ' + data.error);
+                    loader.classList.add('hidden');
+                    btn.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Gagal menghubungi server.");
+                loader.classList.add('hidden');
+                btn.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
