@@ -193,9 +193,6 @@ def generate_final_comparison(original, reconstructed):
     for ax in axes: ax.axis('off')
     return fig_to_base64(fig)
 
-# ==========================================
-# FLASK ROUTES
-# ==========================================
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -279,5 +276,5 @@ def process_image():
     
     return jsonify(response_data)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(debug=True)
